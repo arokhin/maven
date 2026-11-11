@@ -9,7 +9,11 @@ if [ "$MF_SITE" = "true" ]; then
     # -n makes a missing sudo right fail loudly instead of hanging.
     # The AMI ships with empty apt lists, unlike GHA runners: build 29094 failed with "Unable to locate package graphviz".
     sudo -n apt-get update -qq
-    sudo -n apt-get install -y graphviz libgvplugin-neato-layout8
+    # libgvplugin-neato-layout8 exists only from Ubuntu 26.04 (upstream's runner) on; on the agents' 24.04 the
+    # neato plugin ships inside libgvc6, which graphviz pulls in (packages.ubuntu.com, checked 2026-11-11; build 29128).
+    extra=()
+    if apt-cache show libgvplugin-neato-layout8 >/dev/null 2>&1; then extra=(libgvplugin-neato-layout8); fi
+    sudo -n apt-get install -y graphviz "${extra[@]}"
   fi
   mvn site -Preporting "${MF_MVN_COMMON[@]}"
 fi
