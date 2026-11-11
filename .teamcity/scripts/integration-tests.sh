@@ -5,4 +5,6 @@
 # shared agents (Lesson 7). Without the daemon, builds 29098/29099/29100/29122
 # each had ~1057 failures ("Mimir daemon does not run and autostart is disabled").
 # Mimir is only a download cache, so dropping it leaves the test scope unchanged.
-mvn install -Prun-its "${MF_MVN_COMMON[@]}"
+its_args=()
+if [ -n "${MF_ITS_FORKCOUNT:-}" ]; then its_args=("-Dits.forkCount=$MF_ITS_FORKCOUNT"); fi
+mvn install -Prun-its "${MF_MVN_COMMON[@]}" "${its_args[@]}"

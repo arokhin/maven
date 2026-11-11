@@ -182,6 +182,11 @@ fun cellBuildType(cell: Cell): BuildType = BuildType({
         param("env.MF_SITE", (kind == Kind.FULL && os == Os.LINUX).toString())
         param("env.MIMIR_VERSION", "0.13.0")
         param("env.MAVEN_OPTS", heapDumpOpts)
+        // its.forkCount defaults to 0.75C: 6 forks, each spawning nested Maven JVMs, on Windows Large (8 CPU / 15.9 GB).
+        // Upstream gets 3 forks in 16 GB on 4-vCPU runners. Windows IT 29101 hung 13h49m and 29159 stalled at 57m+ with an
+        // unresponsive agent, while Linux Large finishes in ~16m. Windows has no bigger tier (probe), so match upstream's
+        // per-fork memory instead. Empty = upstream default.
+        param("env.MF_ITS_FORKCOUNT", if (kind == Kind.ITS && os == Os.WINDOWS) "3" else "")
     }
     steps {
         bashStep("${kind.title} with the just-built Maven", os, "use-dist.sh", kind.script)
