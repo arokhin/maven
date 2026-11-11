@@ -211,13 +211,18 @@ fun cellBuildType(cell: Cell): BuildType = BuildType({
     features {
         xmlReport {
             reportType = XmlReport.XmlReportType.JUNIT
-            // The IT suite's fixture projects contain tests that are meant to fail (e.g. mng5640 FailingTest). Their reports
-            // under target/test-classes/** are test data, not results: importing them gave 3 false failures per cell (chain 29136).
-            rules = """
-                +:**/target/surefire-reports/TEST-*.xml
-                +:**/target/failsafe-reports/TEST-*.xml
-                -:its/core-it-suite/target/test-classes/**
-            """.trimIndent()
+            // The IT suite's fixture projects contain tests that are meant to fail (e.g. mng5640 FailingTest), and they write
+            // reports under its/core-it-suite/target/test-classes/**. Those are test data, not results (3 false failures per
+            // cell, chain 29136). A "-:" exclusion did not override "+:**" in the report watcher (chain 29148), so list the real
+            // module roots instead: everything deeper than two levels is under its/core-it-support (checked on 09ea577).
+            rules = listOf("surefire-reports", "failsafe-reports").joinToString("\n") { dir ->
+                """
+                +:target/$dir/TEST-*.xml
+                +:*/target/$dir/TEST-*.xml
+                +:*/*/target/$dir/TEST-*.xml
+                +:its/core-it-support/**/target/$dir/TEST-*.xml
+                """.trimIndent()
+            }
         }
     }
 })
