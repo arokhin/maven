@@ -211,9 +211,12 @@ fun cellBuildType(cell: Cell): BuildType = BuildType({
     features {
         xmlReport {
             reportType = XmlReport.XmlReportType.JUNIT
+            // The IT suite's fixture projects contain tests that are meant to fail (e.g. mng5640 FailingTest). Their reports
+            // under target/test-classes/** are test data, not results: importing them gave 3 false failures per cell (chain 29136).
             rules = """
                 +:**/target/surefire-reports/TEST-*.xml
                 +:**/target/failsafe-reports/TEST-*.xml
+                -:its/core-it-suite/target/test-classes/**
             """.trimIndent()
         }
     }
